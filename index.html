@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSV Check 技术文档</title>
+<style>
+  :root{
+    --bg:#F7F6F2;
+    --surface:#FFFFFF;
+    --surface-2:#F1EFE8;
+    --border:#E3E0D6;
+    --border-strong:#CFCAB9;
+    --text:#26251F;
+    --text-2:#5F5E5A;
+    --text-3:#8A8880;
+    --accent:#0F6E56;
+    --accent-soft:#E1F5EE;
+    --amber:#854F0B;
+    --amber-soft:#FAEEDA;
+    --red:#A32D2D;
+    --red-soft:#FCEBEB;
+    --blue:#185FA5;
+    --blue-soft:#E6F1FB;
+    --mono:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    --r:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--sans);
+    background:var(--bg);
+    color:var(--text);
+    font-size:15px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  .layout{display:flex;max-width:1180px;margin:0 auto;gap:0;align-items:flex-start}
+
+  aside{
+    position:sticky;top:0;flex:0 0 246px;
+    height:100vh;overflow-y:auto;
+    padding:34px 20px 40px 28px;
+    border-right:1px solid var(--border);
+  }
+  aside::-webkit-scrollbar{width:6px}
+  aside::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+  .brand{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+  .brand-mark{
+    width:26px;height:26px;border-radius:7px;
+    background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:-.5px;
+  }
+  .brand-name{font-size:14px;font-weight:600;letter-spacing:-.2px}
+  .brand-sub{font-size:12px;color:var(--text-3);margin-bottom:26px;padding-left:35px;margin-top:-4px}
+
+  nav a{
+    display:block;font-size:13.5px;color:var(--text-2);text-decoration:none;
+    padding:6px 10px;border-radius:6px;margin-bottom:1px;
+    border-left:2px solid transparent;border-bottom:none;transition:all .14s;
+  }
+  nav a:hover{color:var(--text);background:var(--surface-2);border-bottom:none}
+  nav a.active{color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent);font-weight:500}
+  nav a.sub{padding-left:24px;font-size:12.5px;color:var(--text-3)}
+  nav a.sub.active{color:var(--accent)}
+  .nav-group{font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.8px;text-transform:uppercase;margin:20px 0 6px 10px}
+
+  main{flex:1;min-width:0;padding:34px 46px 100px 46px;max-width:900px}
+  header.doc-head{margin-bottom:44px;padding-bottom:28px;border-bottom:1px solid var(--border)}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .badge{
+    font-family:var(--mono);font-size:11.5px;padding:3px 9px;border-radius:20px;
+    background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);
+  }
+  .badge.ok{background:var(--accent-soft);color:var(--accent);border-color:#9FE1CB}
+  h1{font-size:31px;font-weight:600;letter-spacing:-.7px;line-height:1.3;margin-bottom:12px}
+  .lede{font-size:16px;color:var(--text-2);line-height:1.7;max-width:640px}
+
+  section{margin-bottom:54px;scroll-margin-top:24px}
+  h2{
+    font-size:21px;font-weight:600;letter-spacing:-.4px;
+    margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border);
+    display:flex;align-items:baseline;gap:11px;
+  }
+  h2 .num{
+    font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text-3);
+    background:var(--surface-2);padding:2px 7px;border-radius:5px;
+  }
+  h3{font-size:16px;font-weight:600;letter-spacing:-.2px;margin:30px 0 11px;scroll-margin-top:24px}
+  h3:first-of-type{margin-top:6px}
+  h4{font-size:14px;font-weight:600;margin:20px 0 8px;color:var(--text)}
+  p{margin-bottom:13px;color:var(--text)}
+  p:last-child{margin-bottom:0}
+  strong{font-weight:600}
+  em{font-style:normal;background:linear-gradient(transparent 62%,#FAC775 62%);padding:0 1px}
+  code{
+    font-family:var(--mono);font-size:.885em;
+    background:var(--surface-2);padding:1.5px 5px;border-radius:4px;
+    border:1px solid var(--border);color:#42403A;
+  }
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid #9FE1CB}
+  a:hover{border-bottom-color:var(--accent)}
+
+  ul,ol{margin:0 0 14px 0;padding-left:22px}
+  li{margin-bottom:6px;color:var(--text)}
+  li::marker{color:var(--text-3)}
+
+  .note{
+    border-left:3px solid var(--blue);background:var(--blue-soft);
+    padding:13px 17px;border-radius:0 var(--r) var(--r) 0;margin:16px 0;font-size:14px;
+  }
+  .note.warn{border-left-color:#BA7517;background:var(--amber-soft)}
+  .note.danger{border-left-color:#E24B4A;background:var(--red-soft)}
+  .note.good{border-left-color:#1D9E75;background:var(--accent-soft)}
+  .note .label{
+    font-size:11.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+    display:block;margin-bottom:4px;
+  }
+  .note.good .label{color:var(--accent)}
+  .note.warn .label{color:var(--amber)}
+  .note.danger .label{color:var(--red)}
+  .note:not(.warn):not(.danger):not(.good) .label{color:var(--blue)}
+  .note p{font-size:14px;margin-bottom:8px}
+  .note p:last-child{margin-bottom:0}
+
+  .code-wrap{position:relative;margin:14px 0}
+  pre{
+    background:#26251F;color:#E8E6DD;
+    padding:15px 17px;border-radius:var(--r);
+    font-family:var(--mono);font-size:13px;line-height:1.7;
+    overflow-x:auto;border:1px solid #191813;
+  }
+  pre code{background:none;border:none;padding:0;color:inherit;font-size:13px}
+  pre .c{color:#8A8880}
+  pre .s{color:#97C459}
+  pre .k{color:#F0997B}
+  pre .n{color:#FAC775}
+  .copy{
+    position:absolute;top:9px;right:9px;
+    font-family:var(--mono);font-size:11px;
+    background:#3A3830;color:#B4B2A9;border:1px solid #4A4840;
+    padding:3px 9px;border-radius:5px;cursor:pointer;transition:all .14s;
+    opacity:0;
+  }
+  .code-wrap:hover .copy{opacity:1}
+  .copy:hover{background:#4A4840;color:#E8E6DD}
+  .copy.done{background:var(--accent);color:#fff;border-color:var(--accent);opacity:1}
+
+  figure{margin:18px 0;scroll-margin-top:24px}
+  figure .shot{
+    display:block;width:100%;height:auto;border-radius:var(--r);
+    border:1px solid var(--border-strong);cursor:zoom-in;
+    box-shadow:0 1px 2px rgba(38,37,31,.07),0 8px 22px -12px rgba(38,37,31,.28);
+    transition:box-shadow .18s, transform .18s;
+    background:#8C8A82;
+  }
+  figure .shot:hover{
+    box-shadow:0 2px 4px rgba(38,37,31,.09),0 14px 30px -14px rgba(38,37,31,.36);
+    transform:translateY(-1px);
+  }
+  figcaption{
+    font-size:12.5px;color:var(--text-3);margin-top:9px;
+    padding-left:11px;border-left:2px solid var(--border-strong);line-height:1.65;
+  }
+  figcaption b{color:var(--text-2);font-weight:600}
+  figcaption code{font-size:11.8px}
+
+  .lb{
+    position:fixed;inset:0;background:rgba(28,28,26,.92);
+    display:none;align-items:center;justify-content:center;
+    padding:34px;z-index:999;cursor:zoom-out;
+  }
+  .lb.on{display:flex}
+  .lb img{max-width:100%;max-height:100%;border-radius:8px;
+    box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  .lb .hint{
+    position:absolute;bottom:16px;left:0;right:0;text-align:center;
+    font-size:12px;color:#B4B2A9;font-family:var(--mono);
+  }
+
+  .table-wrap{overflow-x:auto;margin:15px 0;border:1px solid var(--border);border-radius:var(--r);background:var(--surface)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{
+    text-align:left;font-weight:600;font-size:12.5px;letter-spacing:.2px;
+    padding:10px 14px;background:var(--surface-2);color:var(--text-2);
+    border-bottom:1px solid var(--border);white-space:nowrap;
+  }
+  td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#FBFAF6}
+  td code{font-size:12.5px;white-space:nowrap}
+  .num-col{font-family:var(--mono);text-align:center;white-space:nowrap}
+
+  .pill{
+    display:inline-block;font-family:var(--mono);font-size:12px;font-weight:600;
+    padding:2px 7px;border-radius:5px;min-width:26px;text-align:center;
+  }
+  .pill.g{background:var(--accent-soft);color:var(--accent)}
+  .pill.a{background:var(--amber-soft);color:var(--amber)}
+  .pill.r{background:var(--red-soft);color:var(--red)}
+
+  .out{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+    margin:14px 0;overflow:hidden;
+  }
+  .out-head{
+    padding:8px 14px;background:var(--surface-2);border-bottom:1px solid var(--border);
+    font-size:12px;color:var(--text-2);font-family:var(--mono);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .out-body{
+    font-family:var(--mono);font-size:12.8px;line-height:1.85;
+    padding:13px 16px;white-space:pre;overflow-x:auto;color:#39372F;
+  }
+  .out-body .ok{color:var(--accent);font-weight:600}
+  .out-body .bad{color:var(--red);font-weight:600}
+  .out-body .dim{color:var(--text-3)}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  .card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+    padding:15px 17px;
+  }
+  .card h4{margin:0 0 9px;font-size:13.5px;display:flex;align-items:center;gap:7px}
+  .card ul{margin:0;padding-left:19px;font-size:13.5px}
+  .card li{margin-bottom:5px;color:var(--text-2)}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:0 0 auto}
+  .dot.g{background:#1D9E75}
+  .dot.r{background:#E24B4A}
+
+  .tree{
+    font-family:var(--mono);font-size:13px;line-height:1.85;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+    padding:15px 18px;white-space:pre;overflow-x:auto;color:var(--text-2);
+  }
+  .tree b{color:var(--text);font-weight:600}
+  .tree .cm{color:var(--text-3)}
+
+  details{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+    margin-bottom:9px;overflow:hidden;
+  }
+  details[open]{border-color:var(--border-strong)}
+  summary{
+    padding:12px 16px;cursor:pointer;list-style:none;
+    display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;
+    transition:background .14s;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary:hover{background:#FBFAF6}
+  summary::after{
+    content:"+";margin-left:auto;font-family:var(--mono);font-size:16px;
+    color:var(--text-3);font-weight:400;transition:transform .18s;
+  }
+  details[open] summary::after{content:"−"}
+  details[open] summary{background:var(--surface-2);border-bottom:1px solid var(--border)}
+  .dt-body{padding:14px 17px 16px}
+  .dt-body p{font-size:14px;margin-bottom:9px}
+  .dt-body p:last-child{margin-bottom:0}
+  .dt-body .lbl{font-size:12px;font-weight:600;color:var(--text-3);letter-spacing:.3px;display:block;margin-bottom:3px}
+  summary code{font-size:12.5px}
+
+  footer{
+    margin-top:60px;padding-top:22px;border-top:1px solid var(--border);
+    font-size:12.5px;color:var(--text-3);line-height:1.9;
+  }
+  footer b{color:var(--text-2);font-weight:600}
+
+  @media (max-width:1000px){
+    aside{display:none}
+    main{padding:26px 22px 70px;max-width:100%}
+    .split{grid-template-columns:1fr}
+    h1{font-size:25px}
+  }
+  @media print{
+    aside{display:none}
+    main{max-width:100%;padding:0}
+    pre{white-space:pre-wrap;word-break:break-all}
+    details{border:none;background:none}
+    details[open] summary,.dt-body{padding-left:0;padding-right:0}
+    details>.dt-body{display:block !important}
+    section{page-break-inside:avoid}
+    figure{page-break-inside:avoid}
+    figure .shot{box-shadow:none;border-color:#999;cursor:default}
+    .lb{display:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside>
+  <div class="brand">
+    <div class="brand-mark">CSV</div>
+    <div class="brand-name">CSV Check</div>
+  </div>
+  <div class="brand-sub">技术文档 · v1.0.0 / v1.1.0</div>
+
+  <nav id="toc">
+    <div class="nav-group">开始</div>
+    <a href="#overview">功能定位</a>
+    <a href="#deps">环境依赖</a>
+    <a href="#install">准备与校验</a>
+
+    <div class="nav-group">使用</div>
+    <a href="#steps">操作步骤</a>
+    <a href="#cmd" class="sub">命令与参数</a>
+    <a href="#scenarios" class="sub">五个常见场景</a>
+    <a href="#output">预期输出</a>
+    <a href="#exitcode" class="sub">退出码含义</a>
+
+    <div class="nav-group">排错</div>
+    <a href="#trouble">故障排查</a>
+    <a href="#rules" class="sub">校验顺序与陷阱</a>
+
+    <div class="nav-group">参考</div>
+    <a href="#versions">版本差异</a>
+    <a href="#limits">已知限制</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="doc-head">
+    <div class="badge-row">
+      <span class="badge ok">已实测</span>
+      <span class="badge">Python · 零第三方依赖</span>
+      <span class="badge">9 张终端截图</span>
+      <span class="badge">2026-10-28 核对</span>
+    </div>
+    <h1>CSV Check 技术文档</h1>
+    <p class="lede">
+      一个只读的列名校验工具。在把学生成绩表交给导入系统之前，确认必需的列名是否存在。
+      本文所有输出片段与截图均来自本机实际运行，非按源码推测。
+    </p>
+  </header>
+
+  <section id="overview">
+    <h2><span class="num">01</span>功能定位</h2>
+
+    <p>
+      CSV Check 读取一个 CSV 文件的第一行作为表头，检查列名是否合法、每行字段数是否与表头一致，
+      最后比对调用方要求的必需列是否齐全。整个过程<strong>不修改文件</strong>。
+    </p>
+
+    <div class="split">
+      <div class="card">
+        <h4><span class="dot g"></span>它做什么</h4>
+        <ul>
+          <li>读取表头作为列名</li>
+          <li>检查列名非空、不重复</li>
+          <li>检查每行字段数是否与表头一致</li>
+          <li>比对必需列（区分大小写）</li>
+          <li>输出七行固定格式报告</li>
+          <li>用 0 / 1 / 2 退出码区分结果</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4><span class="dot r"></span>它不做什么</h4>
+        <ul>
+          <li>不修改、不修复文件</li>
+          <li>不校验分数内容</li>
+          <li>不计算任何统计量</li>
+          <li>不检查数据行或学号是否重复</li>
+          <li>不保证导入一定成功</li>
+          <li>发现问题不给改法</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note good">
+      <span class="label">关键边界</span>
+      <p>
+        <code>PASS</code> 的准确含义是「必需列名齐全且文件结构自洽」，<strong>不是</strong>「这张表合格」。
+        <code>score</code> 列里写 <code>abc</code>、写空值、写负数，都不影响结果——工具根本不看数据行里的值。
+      </p>
+    </div>
+  </section>
+
+  <section id="deps">
+    <h2><span class="num">02</span>环境依赖</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项目</th><th>要求</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>Python</td><td class="num-col">≥ 3.8</td><td>已在 <b>3.12.14</b> 与 <b>3.13.12</b> 实测通过</td></tr>
+          <tr><td>第三方包</td><td class="num-col">无</td><td>不需要 <code>pip install</code>，不需要虚拟环境，不需要联网</td></tr>
+          <tr><td>操作系统</td><td class="num-col">任意</td><td>纯 Python，唯一差异是解释器命令名</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>工具只用标准库的四个模块：</p>
+    <div class="code-wrap">
+<pre><code><span class="k">import</span> argparse   <span class="c"># 命令行解析</span>
+<span class="k">import</span> csv        <span class="c"># CSV 解析</span>
+<span class="k">import</span> json       <span class="c"># 仅 python -m csvcheck 时输出 JSON</span>
+<span class="k">from</span> pathlib <span class="k">import</span> Path  <span class="c"># 文件路径</span></code></pre>
+      <button class="copy">copy</button>
+    </div>
+
+    <h3>文件结构：三者必须同层</h3>
+    <p>缺少任何一个都无法运行：</p>
+    <div class="tree"><b>01_写作练习/</b>
+├── <b>check.py</b>              <span class="cm"># 命令行入口</span>
+├── <b>csvcheck/</b>             <span class="cm"># 实现包</span>
+│   ├── __init__.py       <span class="cm"># inspect_csv / format_report</span>
+│   └── __main__.py       <span class="cm"># 支持 python -m csvcheck</span>
+└── <b>samples/</b>              <span class="cm"># 示例数据</span>
+    ├── students.csv
+    ├── missing-name.csv
+    ├── empty.csv
+    └── students.tsv</div>
+
+    <figure>
+      <img class="shot" src="assets/05-tree.png" alt="终端执行 ls、ls csvcheck、ls samples 的实际输出，显示 check.py、csvcheck 包与四个样例文件" loading="lazy">
+      <figcaption>
+        <b>截图 1 · 实际目录</b> — 用 <code>ls</code> 逐层确认三个必备项都在同一层。
+        <code>csvcheck/</code> 里的 <code>__init__.py</code> 与 <code>__main__.py</code> 各司其职，缺一个就报 <code>ModuleNotFoundError</code>。
+      </figcaption>
+    </figure>
+
+    <h3>解释器命令名</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>系统</th><th>命令</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td>macOS / Linux</td><td><code>python3</code></td><td>系统自带的 <code>/usr/bin/python3</code> 若未装 Xcode 命令行工具会不可用</td></tr>
+          <tr><td>Windows</td><td><code>py</code></td><td>部分环境也可用 <code>python</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lede" style="font-size:14px">
+      本文档示例统一使用 <code>python3</code>。在你自己的机器上确认一次可用命令，之后全程沿用同一个。
+    </p>
+  </section>
+
+  <section id="install">
+    <h2><span class="num">03</span>准备与校验</h2>
+
+    <p>不需要安装。进入工具目录后，跑一次已知正常的样例确认环境可用：</p>
+    <div class="code-wrap">
+<pre><code>cd 01_写作练习
+python3 check.py samples/students.csv</code></pre>
+      <button class="copy">copy</button>
+    </div>
+
+    <p>看到 <code>Result: PASS</code> 就说明环境正常，可以开始使用。若报错，先看
+      <a href="#trouble">故障排查</a> 第一条，不要急着重装。</p>
+
+    <figure>
+      <img class="shot" src="assets/01-pass.png" alt="终端执行 python3 check.py samples/students.csv 后输出 PASS，并用 echo $? 确认退出码为 0" loading="lazy">
+      <figcaption>
+        <b>截图 2 · 环境自检通过</b> — 最后一行 <code>exit 0</code> 是我用 <code>echo $?</code> 读出来的真实退出码，
+        不是工具打印的。注意 <code>Data rows: 3</code> 与 <code>Result: PASS</code> 是判断成功的两行。
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="steps">
+    <h2><span class="num">04</span>操作步骤</h2>
+
+    <h3 id="cmd">命令与参数</h3>
+    <div class="code-wrap">
+<pre><code>usage: check.py [-h] [--require REQUIRE [REQUIRE ...]] file
+
+Check a student table without changing it.
+
+positional arguments:
+  file                  input CSV path
+
+options:
+  -h, --help            show this help message and exit
+  --require REQUIRE [REQUIRE ...]
+                        required column names (default: id name score)</code></pre>
+      <button class="copy">copy</button>
+    </div>
+
+    <figure>
+      <img class="shot" src="assets/06-help.png" alt="终端执行 python3 check.py --help 打印的完整用法说明" loading="lazy">
+      <figcaption>
+        <b>截图 3 · 帮助原文</b> — <code>--help</code> 是最权威的参数说明来源。
+        注意用法行里没有 <code>--delimiter</code>，因为 1.0.0 不支持该参数。
+      </figcaption>
+    </figure>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>参数</th><th>必填</th><th>默认值</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>file</code></td><td class="num-col">是</td><td class="num-col">—</td><td>待检查的 CSV 路径，相对或绝对均可</td></tr>
+          <tr><td><code>--require</code></td><td class="num-col">否</td><td><code>id name score</code></td><td>自定义必需列名，空格分隔多个</td></tr>
+          <tr><td><code>--delimiter</code></td><td class="num-col">否</td><td><code>,</code></td><td><b>仅 1.1.0 提供</b>。制表符写作 <code>\t</code></td></tr>
+          <tr><td><code>-h</code> / <code>--help</code></td><td class="num-col">否</td><td class="num-col">—</td><td>打印帮助并退出</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note warn">
+      <span class="label">参数位置陷阱</span>
+      <p>
+        <code>--require</code> 使用 <code>nargs="+"</code>，会连续吃掉后面所有非选项词。
+        它必须放在文件名<strong>之后</strong>，否则文件名会被当成列名：
+      </p>
+      <div class="code-wrap" style="margin:8px 0 0">
+<pre><code><span class="c"># 正确</span>
+python3 check.py samples/students.csv --require id name
+
+<span class="c"># 错误：students.csv 被 --require 吃掉，报 file is required</span>
+python3 check.py --require id samples/students.csv</code></pre>
+        <button class="copy">copy</button>
+      </div>
+      <p style="margin-top:8px">这个限制<strong>只针对 <code>--require</code></strong>。<code>--delimiter</code> 是单值选项，放前放后都成立。</p>
+    </div>
+
+    <figure>
+      <img class="shot" src="assets/09-argpos.png" alt="终端执行 python3 check.py --require id samples/students.csv 报错 file is required，退出码 2" loading="lazy">
+      <figcaption>
+        <b>截图 4 · 参数位置放错的真实报错</b> — 文件名 <code>samples/students.csv</code> 被 <code>--require</code>
+        当成列名吃掉了，所以 argparse 认为没给 <code>file</code>。退出码是 <b>2</b>，与文件解析失败共用。
+      </figcaption>
+    </figure>
+
+    <h3 id="scenarios">五个常见场景</h3>
+
+    <h4>场景 A · 检查标准成绩表</h4>
+    <div class="code-wrap">
+<pre><code>cd 01_写作练习
+python3 check.py samples/students.csv</code></pre>
+      <button class="copy">copy</button>
+    </div>
+    <p>期望 <code>Data rows: 3</code>、<code>Missing columns: none</code>、<code>Result: PASS</code>，退出码 0（见上方截图 2）。</p>
+
+    <h4>场景 B · 只要求部分列</h4>
+    <div class="code-wrap">
+<pre><code>python3 check.py samples/students.csv --require id name</code></pre>
+      <button class="copy">copy</button>
+    </div>
+    <p><code>score</code> 不在要求内，因此即使缺失也不影响 PASS。</p>
+
+    <h4>场景 C · 遇到空文件后恢复</h4>
+    <p><b>第一步，复现问题：</b></p>
+    <div class="code-wrap">
+<pre><code>python3 check.py samples/empty.csv</code></pre>
+      <button class="copy">copy</button>
+    </div>
+
+    <figure>
+      <img class="shot" src="assets/02-empty.png" alt="终端执行 python3 check.py samples/empty.csv 报错 File has no header，退出码 2" loading="lazy">
+      <figcaption>
+        <b>截图 5 · 空文件的真实报错</b> — 只有两行有效信息：<code>ERROR:</code> 说明症状，
+        <code>Next step:</code> 给兜底建议。退出码 2 表示「文件读不出表头」，不是「内容不合格」。
+      </figcaption>
+    </figure>
+
+    <p><b>第二步，换已知正常的文件重跑：</b></p>
+    <div class="code-wrap">
+<pre><code>python3 check.py samples/students.csv</code></pre>
+      <button class="copy">copy</button>
+    </div>
+    <p>确认 <code>Result: PASS</code> 即为恢复。若是自己的数据，回源补上表头行再试，而不是重装工具。</p>
+
+    <h4>场景 D · 检查制表符分隔的文件（需 1.1.0）</h4>
+    <div class="code-wrap">
+<pre><code>python3 check.py samples/students.tsv --delimiter '\t'</code></pre>
+      <button class="copy">copy</button>
+    </div>
+
+    <figure>
+      <img class="shot" src="assets/04-tsv.png" alt="1.1.0 下 students.tsv 默认报 FAIL，加 --delimiter 参数后变为 PASS 的对比" loading="lazy">
+      <figcaption>
+        <b>截图 6 · 分隔符前后对比</b> — 上半段是默认行为：整行被当成一列，<code>Columns</code> 里能看到制表符，
+        三列全判缺失。下半段加上 <code>--delimiter '\t'</code> 后 <code>Data rows: 2</code>、PASS。
+        这就是「退出码 1 不等于缺列」的一个实例。
+      </figcaption>
+    </figure>
+
+    <p>1.0.0 会报 <code>unrecognized arguments: --delimiter</code>。升级方式见 <a href="#versions">版本差异</a>。</p>
+
+    <h4>场景 E · 在脚本中调用</h4>
+    <div class="code-wrap">
+<pre><code>python3 check.py data.csv
+<span class="k">case</span> $? <span class="k">in</span>
+  <span class="n">0</span>) echo <span class="s">"通过"</span> ;;
+  <span class="n">1</span>) echo <span class="s">"缺列，需要改表头"</span> ;;
+  <span class="n">2</span>) echo <span class="s">"文件读不了，检查编码或分隔符"</span> ;;
+<span class="k">esac</span></code></pre>
+      <button class="copy">copy</button>
+    </div>
+  </section>
+
+  <section id="output">
+    <h2><span class="num">05</span>预期输出</h2>
+
+    <p>成功读到表头后，固定输出七行：</p>
+    <div class="out">
+      <div class="out-head"><span>samples/students.csv</span><span>退出码 0</span></div>
+      <div class="out-body">CSV Check 1.0.0
+File: samples/students.csv
+Data rows: <span class="ok">3</span>
+Columns: id, name, score
+Missing columns: none
+Result: <span class="ok">PASS</span>
+<span class="dim">PASS checks column names, not score values.</span></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>行</th><th>含义</th><th>易错点</th></tr></thead>
+        <tbody>
+          <tr><td><code>CSV Check &lt;版本&gt;</code></td><td>工具版本号</td><td>排查问题时先确认版本</td></tr>
+          <tr><td><code>File: &lt;路径&gt;</code></td><td>回显传入路径</td><td>原样回显，不展开为绝对路径</td></tr>
+          <tr><td><code>Data rows: &lt;n&gt;</code></td><td>数据记录条数</td><td><b>不含表头。4 行文件显示 3</b></td></tr>
+          <tr><td><code>Columns: &lt;列名&gt;</code></td><td>文件中实际读到的列名</td><td>是文件里的，不是要求的</td></tr>
+          <tr><td><code>Missing columns: …</code></td><td>缺失的必需列</td><td>顺序与 <code>--require</code> 一致</td></tr>
+          <tr><td><code>Result: PASS/FAIL</code></td><td>总判定</td><td>只看列名</td></tr>
+          <tr><td>固定提示句</td><td>工具自带的边界声明</td><td><b>是原始输出的一部分，不应删除</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>对照：FAIL 长什么样</h3>
+    <figure>
+      <img class="shot" src="assets/03-fail.png" alt="终端检查 missing-name.csv 输出 FAIL，Missing columns 显示 name，退出码 1" loading="lazy">
+      <figcaption>
+        <b>截图 7 · FAIL 的完整形态</b> — 与 PASS 相比只有两处不同：<code>Missing columns:</code> 列出缺失列，
+        <code>Result:</code> 变成 FAIL。注意文件仍然被完整读取（<code>Data rows: 1</code>），不是错误退出。
+      </figcaption>
+    </figure>
+
+    <div class="note">
+      <span class="label">两个对照技巧</span>
+      <p><b>判定规则</b>：<code>missing_columns</code> 为空 → PASS；非空 → FAIL。</p>
+      <p><b>第 3、4 行的对照价值</b>：当 <code>Columns</code> 里出现带空格或制表符的怪名字时，说明分隔符或导出格式有问题，而不是数据有问题。</p>
+    </div>
+
+    <h3 id="exitcode">退出码含义</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>退出码</th><th>触发条件</th><th>含义</th><th>典型样例</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="num-col"><span class="pill g">0</span></td>
+            <td>必需列齐全</td><td>校验通过</td><td><code>students.csv</code></td>
+          </tr>
+          <tr>
+            <td class="num-col"><span class="pill a">1</span></td>
+            <td>文件可读，但有必需列缺失</td><td>内容不合格</td><td><code>missing-name.csv</code></td>
+          </tr>
+          <tr>
+            <td class="num-col"><span class="pill r">2</span></td>
+            <td>文件无法解析（无表头、编码错、结构错）</td><td>输入不合格</td><td><code>empty.csv</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note warn">
+      <span class="label">两个重要补充</span>
+      <p>
+        <b>参数错误也用 2。</b><code>argparse</code> 自身的参数错误（缺 <code>file</code>、未知选项）同样返回 2，
+        与文件解析失败共用退出码。脚本若要区分，需看 stderr 内容。见截图 4。
+      </p>
+      <p>
+        <b>退出码 1 不等于「只有缺列一种原因」。</b>
+        <code>students.tsv</code> 在 1.0.0 下也返回 1，但根因是整行被当作单列、三列全缺，属分隔符问题。
+        不能把 1 直接等同于「表头少写了某列」。见截图 6。
+      </p>
+    </div>
+  </section>
+
+  <section id="trouble">
+    <h2><span class="num">06</span>故障排查</h2>
+
+    <p>展开对应条目查看原因与处理。所有报错文本均为实际输出的原文。</p>
+
+    <details open>
+      <summary><code>ERROR: File has no header.</code> <span class="pill r" style="margin-left:auto">2</span></summary>
+      <div class="dt-body">
+        <p><span class="lbl">原因</span>文件为空；或首行是空行；或选错了文件。</p>
+        <p><span class="lbl">处理</span>补表头行，或确认路径指向了正确的文件。用 <code>samples/students.csv</code> 重跑可验证工具本身正常。</p>
+        <p><span class="lbl">实际输出</span>见截图 5。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><code>ERROR: Header names must not be blank.</code> <span class="pill r" style="margin-left:auto">2</span></summary>
+      <div class="dt-body">
+        <p><span class="lbl">原因</span>某个列名为空或纯空白。常见于 <code>id,,score</code>。</p>
+        <p><span class="lbl">处理</span>补上列名。<b>注意</b>：这一项检查用了 <code>strip()</code>，所以纯空格也算空。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><code>ERROR: Header names must be unique.</code> <span class="pill r" style="margin-left:auto">2</span></summary>
+      <div class="dt-body">
+        <p><span class="lbl">原因</span>两列同名，通常是复制粘贴造成的重复。</p>
+        <p><span class="lbl">处理</span>改名，确保表头内每个列名唯一。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><code>ERROR: Row N has X fields; expected Y.</code> <span class="pill r" style="margin-left:auto">2</span></summary>
+      <div class="dt-body">
+        <p><span class="lbl">原因</span>第 N 行的字段数与表头列数不符，一般是漏写或多写了分隔符。</p>
+        <p><span class="lbl">处理</span>定位到第 N 行，检查该行的分隔符数量。注意 <code>N</code> 是<b>文件行号</b>，含表头。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><code>ERROR: Cannot read a UTF-8 CSV file: …</code> <span class="pill r" style="margin-left:auto">2</span></summary>
+      <div class="dt-body">
+        <p><span class="lbl">原因</span>三种可能：编码不是 UTF-8；路径不存在；路径指向的是一个目录。</p>
+        <p><span class="lbl">处理</span>把文件转存为 UTF-8；核对路径拼写；确认传的是文件而非文件夹。</p>
+        <p><span class="lbl">实测三种原文</span></p>
+        <div class="code-wrap" style="margin:6px 0 0">
+<pre><code><span class="c"># 非 UTF-8 字节</span>
+Cannot read a UTF-8 CSV file: 'utf-8' codec can't decode byte 0xe1 in position 18
+
+<span class="c"># 文件不存在</span>
+Cannot read a UTF-8 CSV file: [Errno 2] No such file or directory: 'nope.csv'
+
+<span class="c"># 传的是目录</span>
+Cannot read a UTF-8 CSV file: [Errno 21] Is a directory: 'adir'</code></pre>
+          <button class="copy">copy</button>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><code>ERROR: Delimiter must be one character…</code> <span class="pill r" style="margin-left:auto">2</span></summary>
+      <div class="dt-body">
+        <p><span class="lbl">原因</span><code>--delimiter</code> 传了多字符，或传了换行。仅 1.1.0 有这个检查。</p>
+        <p><span class="lbl">处理</span>传单个字符。制表符写作 <code>'\t'</code>（两个字符的转义写法，工具会自行转换）。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><code>check.py: error: the following arguments are required: file</code> <span class="pill r" style="margin-left:auto">2</span></summary>
+      <div class="dt-body">
+        <p><span class="lbl">原因</span>把 <code>--require</code> 放到了文件名前面，文件名被当成列名吃掉了。</p>
+        <p><span class="lbl">处理</span>把文件名移到最前，或把 <code>--require</code> 放到最后。见截图 4。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><code>unrecognized arguments: --delimiter</code> <span class="pill r" style="margin-left:auto">2</span></summary>
+      <div class="dt-body">
+        <p><span class="lbl">原因</span>用的是 1.0.0，该版本不支持 <code>--delimiter</code>。</p>
+        <p><span class="lbl">处理</span>升级到 1.1.0，见 <a href="#versions">版本差异</a>。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><code>Result: FAIL</code> 但看不出哪里缺列</summary>
+      <div class="dt-body">
+        <p><span class="lbl">原因</span>看 <code>Missing columns:</code> 那一行。<code>Columns:</code> 是文件里实际读到的列名，两者对照即可定位。</p>
+        <p><span class="lbl">常见误判</span>表头带空格。写 <code>id, name,score</code>（<code>name</code> 前有空格）时，工具会认为缺 <code>name</code>。
+        因为非空检查用了 <code>strip()</code>，比对却用原字符串。从 Excel 导出的表常带这种空格，需手工清掉。</p>
+        <p><span class="lbl">实际输出</span>见下方截图 8。</p>
+      </div>
+    </details>
+
+    <figure>
+      <img class="shot" src="assets/07-space.png" alt="用 cat -A 显示表头里 name 前有空格，检查后 Missing columns 报告缺 name，结果为 FAIL" loading="lazy">
+      <figcaption>
+        <b>截图 8 · 表头空格的陷阱</b> — 先用 <code>cat -A</code> 把不可见字符显示出来（行尾的 <code>$</code> 是行结束标记），
+        能看到 <code>id, name,score</code> 里 <code>name</code> 前确实有个空格。
+        <code>Columns</code> 输出里保留了双空格，可比对确认。
+      </figcaption>
+    </figure>
+
+    <details>
+      <summary>文件明明有 4 行，为什么显示 Data rows: 3</summary>
+      <div class="dt-body">
+        <p><span class="lbl">原因</span>不是错误。<code>Data rows</code> 统计的是<b>数据记录</b>，不含表头。</p>
+        <p><span class="lbl">说明</span><code>students.csv</code> 共 4 行：第 1 行 <code>id,name,score</code> 是表头，后 3 行是数据，所以显示 3。</p>
+      </div>
+    </details>
+
+    <h3 id="rules">校验顺序与陷阱</h3>
+    <p>报错只报<strong>第一个</strong>命中的问题，顺序固定为：</p>
+    <div class="code-wrap">
+<pre><code>打开文件 → 读表头 → 表头空值 → 表头重复 → 逐行字段数 → 比对必需列</code></pre>
+      <button class="copy">copy</button>
+    </div>
+
+    <div class="note danger">
+      <span class="label">由此推出的一条关键结论</span>
+      <p>
+        如果某一行字段数不对，工具<strong>直接报 ERROR，不会告诉你缺哪列</strong>。
+        所以「补表头」和「改分隔符」是两类完全不同的修法，不能混为一谈。
+      </p>
+    </div>
+
+    <h4>通用的 Next step 有局限</h4>
+    <p>
+      所有 <code>ERROR</code> 分支都会打印同一句
+      <code>Next step: use a readable UTF-8 file with a header row.</code>
+      这句对编码类错误贴切，但对「字段数不符」「分隔符非法」并不精准。
+      <em>排查时应以 <code>ERROR:</code> 那一行为准</em>，把 <code>Next step</code> 当作兜底建议。
+    </p>
+  </section>
+
+  <section id="versions">
+    <h2><span class="num">07</span>版本差异</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项目</th><th>1.0.0</th><th>1.1.0</th></tr></thead>
+        <tbody>
+          <tr><td><code>--delimiter</code></td><td>不支持</td><td>支持，默认 <code>,</code>，<code>\t</code> 表示制表符</td></tr>
+          <tr><td><code>inspect_csv</code> 签名</td><td><code>(path, required_columns=())</code></td><td><code>(path, required_columns=(), *, delimiter=",")</code></td></tr>
+          <tr><td>分隔符校验</td><td class="num-col">—</td><td>非单字符或为 CR/LF 时报错</td></tr>
+          <tr><td>TSV 支持</td><td>误判为单列，FAIL</td><td>加 <code>--delimiter '\t'</code> 后正常 PASS</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <b>升级方法</b>：把 <code>updates/v1.1/</code> 下的 <code>check.py</code>、
+      <code>csvcheck/__init__.py</code>、<code>csvcheck/__main__.py</code> 复制覆盖到工具目录。
+      <code>apply_update.py</code> 封装了这个动作，且不会动 <code>docs/</code> 里的文档。
+    </p>
+
+    <p>1.1.0 的实际效果见截图 6。</p>
+
+    <h3>两个入口的默认值不一致</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>入口</th><th><code>--require</code> 默认值</th></tr></thead>
+        <tbody>
+          <tr><td><code>check.py</code></td><td><code>id name score</code></td></tr>
+          <tr><td><code>python -m csvcheck</code></td><td><b>空</b>（不要求任何列）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <figure>
+      <img class="shot" src="assets/08-module.png" alt="模块方式不传 require 时返回 valid true 和 exit 0，传 require 后返回 valid false 和 exit 1" loading="lazy">
+      <figcaption>
+        <b>截图 9 · 模块方式必须显式给 --require</b> — 上半段同一个 <code>missing-name.csv</code>，
+        因为没要求检查 <code>name</code>，结果是 <code>valid: true</code>、<code>exit 0</code>。
+        下半段加上 <code>--require id name</code> 才报出 <code>valid: false</code>、<code>exit 1</code>。
+      </figcaption>
+    </figure>
+
+    <div class="note danger">
+      <span class="label">不传 --require 时，模块方式的检查形同虚设</span>
+      <p>
+        同一文件用 <code>check.py</code> 检查是 <code>Result: FAIL</code>、退出码 1（截图 7），
+        用 <code>python -m csvcheck</code> 不带参数却是 <code>valid: true</code>、退出码 0（截图 9 上半段）。
+        把工具接进自动化脚本时，这个差异会直接导致漏检。
+      </p>
+    </div>
+  </section>
+
+  <section id="limits">
+    <h2><span class="num">08</span>已知限制</h2>
+
+    <ol>
+      <li>
+        <b>空数据表会 PASS。</b>只有表头、没有数据行的文件，<code>Data rows: 0</code> 且 <code>Result: PASS</code>。
+        如果业务上空表应当拒绝，需调用方额外判断 <code>row_count &gt; 0</code>。
+      </li>
+      <li>
+        <b>表头空格不清理。</b><code>id, name,score</code> 会被判为缺 <code>name</code>，见截图 8。
+      </li>
+      <li>
+        <b>只认一个分隔符。</b>混合分隔、分号分隔都在 1.1.0 里靠 <code>--delimiter</code> 逐个指定。
+      </li>
+      <li>
+        <b>不做字段类型转换。</b>全部按字符串处理，反正不校验数据值。
+      </li>
+      <li>
+        <b><code>--require</code> 无法表达「可选」。</b>一次调用只有一组必需列。
+      </li>
+      <li>
+        <b>两个入口默认检查项不同</b>，见 <a href="#versions">版本差异</a>与截图 9，模块方式不传 <code>--require</code> 等于不检查。
+      </li>
+      <li>
+        <b>无 <code>--quiet</code> / <code>--json</code> 开关。</b>脚本要 JSON 只能走
+        <code>python -m csvcheck</code>，两者输出格式不同。
+      </li>
+    </ol>
+
+    <h3>输入要求汇总</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>要求</th><th>说明</th><th>不满足的后果</th></tr></thead>
+        <tbody>
+          <tr><td>UTF-8 编码</td><td>允许带 BOM（按 <code>utf-8-sig</code> 读取）</td><td>报 <code>Cannot read a UTF-8 CSV file</code>，退出码 2</td></tr>
+          <tr><td>必须有表头行</td><td>第一行视为列名</td><td>报 <code>File has no header.</code>，退出码 2</td></tr>
+          <tr><td>列名非空</td><td>单个列名不能只有空白</td><td>报 <code>Header names must not be blank.</code>，退出码 2</td></tr>
+          <tr><td>列名唯一</td><td>不能有两列同名</td><td>报 <code>Header names must be unique.</code>，退出码 2</td></tr>
+          <tr><td>字段数一致</td><td>每行字段数 = 表头列数</td><td>报 <code>Row N has X fields; expected Y.</code>，退出码 2</td></tr>
+          <tr><td>默认逗号分隔</td><td>1.0.0 硬编码逗号</td><td>TSV 等文件需 1.1.0 的 <code>--delimiter</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="margin-top:16px">
+      另有两类输入<b>可以</b>正常处理，不必担心：
+      带 BOM 的 UTF-8 文件（<code>Data rows</code> 正确、PASS）；
+      引号内含逗号的值，如 <code>1,"Ada, Jr",95</code>（按 CSV 标准解析，<code>Data rows: 1</code>、PASS）。
+    </p>
+  </section>
+
+  <footer>
+    <p><b>事实来源</b> · 本文所有命令、输出片段与 9 张截图均在本机实际执行所得，非按源码推测，也非手绘示意。</p>
+    <p>
+      截图生成方式：先用真实命令捕获输出文本与退出码，再渲染为终端样式图片；
+      退出码由 <code>$?</code> 逐一读取确认，未做任何修饰。
+    </p>
+    <p>
+      覆盖范围：1.0.0 与 1.1.0 分别运行 4 个官方样例与 8 个自建边界样例。
+      边界样例含：字段数不齐、表头重复、表头空值、仅表头无数据、带 BOM、非 UTF-8 字节、
+      纯空行、表头带空格、引号内逗号、传入目录、参数位置错误。
+    </p>
+    <p style="margin-top:12px;color:var(--text-3)">最后核对：2026-10-28</p>
+  </footer>
+</main>
+</div>
+
+<div class="lb" id="lb">
+  <img src="" alt="">
+  <div class="hint">点击任意位置关闭</div>
+</div>
+
+<script>
+document.querySelectorAll('.copy').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var pre = btn.parentElement.querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(function(){
+      btn.textContent = 'copied';
+      btn.classList.add('done');
+      setTimeout(function(){ btn.textContent = 'copy'; btn.classList.remove('done'); }, 1400);
+    });
+  });
+});
+
+var lb = document.getElementById('lb');
+var lbImg = lb.querySelector('img');
+document.querySelectorAll('figure .shot').forEach(function(img){
+  img.addEventListener('click', function(){
+    lbImg.src = img.src;
+    lbImg.alt = img.alt;
+    lb.classList.add('on');
+  });
+});
+lb.addEventListener('click', function(){
+  lb.classList.remove('on');
+  lbImg.src = '';
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') { lb.classList.remove('on'); lbImg.src = ''; }
+});
+
+var links = Array.prototype.slice.call(document.querySelectorAll('#toc a'));
+var targets = links.map(function(a){
+  return document.querySelector(a.getAttribute('href'));
+}).filter(Boolean);
+
+function setActive(){
+  var pos = window.scrollY + 110;
+  var current = targets[0];
+  targets.forEach(function(t){ if (t.offsetTop <= pos) current = t; });
+  if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 40){
+    current = targets[targets.length - 1];
+  }
+  links.forEach(function(a){
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current.id);
+  });
+}
+window.addEventListener('scroll', setActive, {passive:true});
+window.addEventListener('resize', setActive);
+setActive();
+</script>
+</body>
+</html>
