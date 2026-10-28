@@ -1,10 +1,27 @@
 # CSV Check 技术文档
 
-CSV Check 是一个只读的 CSV 列名校验工具。本仓库是它的中文技术文档站点，通过 GitHub Pages 发布。
+CSV Check 是一个只读的 CSV 列名校验工具。本仓库是它的中文技术文档站点。
+
+## 在线阅读
+
+**https://htmlpreview.github.io/?https://github.com/Olivia123170/check/blob/main/standalone.html**
+
+这个链接直接渲染 `standalone.html`（九张截图以 data URI 内嵌，不依赖同目录资源）。
+
+本地打开：直接双击 `index.html`，或在仓库目录运行 `python3 -m http.server 8000`。
+
+## 仓库结构
+
+| 文件 | 说明 |
+|---|---|
+| `index.html` | 文档主文件，图片走 `assets/` 相对路径 |
+| `assets/*.png` | 9 张终端截图 |
+| `standalone.html` | 单文件版，图片全部内嵌，适合任何无法访问同级资源的托管环境 |
+| `CSV_Check技术文档.md` | Markdown 源文件 |
 
 ## 文档内容
 
-`index.html` 包含 8 个章节 + 9 张实测终端截图：
+8 章 + 9 张实测截图：
 
 | 章节 | 内容 |
 |---|---|
@@ -17,8 +34,6 @@ CSV Check 是一个只读的 CSV 列名校验工具。本仓库是它的中文�
 | 07 版本差异 | 1.0.0 vs 1.1.0，`--delimiter` 与两个入口的默认值差异 |
 | 08 已知限制 | 7 条限制 + 输入要求汇总表 |
 
-`CSV_Check技术文档.md` 是同一份内容的 Markdown 源文件。
-
 ## 事实来源
 
 文档中所有命令输出与截图均来自本机实际运行，不是按源码推测，也不是手绘示意：
@@ -29,12 +44,31 @@ CSV Check 是一个只读的 CSV 列名校验工具。本仓库是它的中文�
 
 边界样例覆盖：字段数不齐、表头重复、表头空值、仅表头无数据、带 BOM、非 UTF-8 字节、纯空行、表头带空格、引号内逗号、传入目录、参数位置错误。
 
-## 本地查看
+## 更新方式
+
+改完 `index.html` 后需要同步重建单文件版，否则两个版本会不一致：
 
 ```sh
-python3 -m http.server 8000
-# 打开 http://localhost:8000
+python3 - <<'EOF'
+import base64, pathlib, re
+root = pathlib.Path(".")
+html = (root / "index.html").read_text(encoding="utf-8")
+def inline(m):
+    data = base64.b64encode((root / m.group(1)).read_bytes()).decode()
+    return 'src="data:image/png;base64,' + data + '"'
+out, n = re.subn(r'src="(assets/[^"]+\.png)"', inline, html)
+(root / "standalone.html").write_text(out, encoding="utf-8")
+print(f"inlined {n} images")
+EOF
 ```
+
+然后 `git push`，在线阅读链接会自动反映新内容。
+
+## 关于 GitHub Pages
+
+本仓库的 GitHub Pages 尚未启用。开启需要仓库管理员权限，而自动化令牌无权创建 Pages 站点（`Resource not accessible by integration`），所以当前用 htmlpreview 提供在线阅读。
+
+若要在 GitHub 网页端手动开启：Settings → Pages → Source 选 `Deploy from a branch` → Branch 选 `main`、目录 `/ (root)` → Save。开启后的地址是 https://olivia123170.github.io/check/
 
 ## 许可
 
