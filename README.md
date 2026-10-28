@@ -1,12 +1,10 @@
 # CSV Check 技术文档
 
-CSV Check 是一个只读的 CSV 列名校验工具。本仓库是它的中文技术文档站点。
+CSV Check 是一个只读的 CSV 列名校验工具。本仓库是它的中文技术文档站点，已用 GitHub Pages 发布。
 
 ## 在线阅读
 
-**https://htmlpreview.github.io/?https://github.com/Olivia123170/check/blob/main/standalone.html**
-
-这个链接直接渲染 `standalone.html`（九张截图以 data URI 内嵌，不依赖同目录资源）。
+**https://olivia123170.github.io/check/**
 
 本地打开：直接双击 `index.html`，或在仓库目录运行 `python3 -m http.server 8000`。
 
@@ -63,12 +61,6 @@ EOF
 ```
 
 然后 `git push`，在线阅读链接会自动反映新内容。
-
-## 关于 GitHub Pages
-
-本仓库的 GitHub Pages 尚未启用。开启需要仓库管理员权限，而自动化令牌无权创建 Pages 站点（`Resource not accessible by integration`），所以当前用 htmlpreview 提供在线阅读。
-
-若要在 GitHub 网页端手动开启：Settings → Pages → Source 选 `Deploy from a branch` → Branch 选 `main`、目录 `/ (root)` → Save。开启后的地址是 https://olivia123170.github.io/check/
 
 ## 许可
 
